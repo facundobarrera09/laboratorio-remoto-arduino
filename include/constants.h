@@ -28,3 +28,9 @@
   #define LED_ALTO 64    // OLED display height, in pixels
   #define OLED_RESET -1  // Reset pin # (or -1 if sharing reset pin)
 #endif
+
+#define WIFI_SSID "FliaBarrera"
+#define WIFI_PASSWORD "heladera24"
+#define HOST_IP "192.168.100.161"
+#define HOST_PORT 3000
+#define HOST_AUTHORIZATION "Bearer token"

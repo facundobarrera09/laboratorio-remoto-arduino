@@ -8,6 +8,7 @@
 
 #ifndef NODEBUG_SOCKETIOCLIENT
    #define SOCKETIOCLIENT_DEBUG(...) Serial.printf(__VA_ARGS__);
+//    #define SOCKETIOCLIENT_DEBUG(...) printf(__VA_ARGS__);
 #else
    #define SOCKETIOCLIENT_DEBUG(...)
 #endif
@@ -43,6 +44,7 @@ public:
 	void remove(const char* event);
 	void disconnect();
 	void setAuthorization(const char * user, const char * password);
+	void setAuthorization(const char * authorization);
 };
 
 #endif
