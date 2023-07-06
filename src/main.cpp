@@ -1,6 +1,6 @@
 #define DEBUG true
 
-#define COMPILE_DISPLAY
+// #define COMPILE_DISPLAY
 #define COMPILE_SOCKET
 #define COMPILE_JSON
 #define SIMULAR_VALORES true
@@ -23,27 +23,38 @@ void connectedToIO(const char* payload, size_t length) {
   estado_conexion = 1;
 }
 
+void connectionError(const char* payload, size_t length) {
+  if (String(payload) == "unauthorized") {
+    Serial.println("Connection refused: unauthorized");
+    Serial.println("- Use the serial console to set the proper auth value and to attempt connection again (SetAuthorization)");
+
+    estado_conexion = -1;
+  }
+}
+
 void setReceivedConfig(const char* payload, size_t length) {
   Serial.println("Received config");
-  USE_SERIAL.println("PAYLOAD:");
-  USE_SERIAL.println(payload);
   estado_conexion = 2;
 
-  DeserializationError err = config.setConfig(payload);
+  config.setConfig(payload);
+
+  estado_conexion = 3;
+
+  // DeserializationError err = config.setConfig(payload);
   
-  if (err) {
-    USE_SERIAL.println("Error deserializing JSON config string");
-    String error = String("{ \"error\": \"") + err.f_str() + String("\"}");
-    webSocket.emit("config:error", error.c_str());
-    estado_conexion = 1;
+  // if (err) {
+  //   USE_SERIAL.println("Error deserializing JSON config string");
+  //   String error = String("{ \"error\": \"") + err.f_str() + String("\"}");
+  //   webSocket.emit("config:error", error.c_str());
+  //   estado_conexion = 1;
 
-    webSocket.loop();
+  //   webSocket.loop();
 
-    while (true);
-  }
-  else {
-    estado_conexion = 3;
-  }
+  //   while (true);
+  // }
+  // else {
+  //   estado_conexion = 3;
+  // }
 }
 
 void setup() {
@@ -76,12 +87,14 @@ void setup() {
   #endif
 
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP("ciasur", "2022ciasur");
+  WiFiMulti.addAP(wifiSSID, wifiPassword);
 
   webSocket.on("connect", connectedToIO);
+  webSocket.on("connection:error", connectionError);
   webSocket.on("config:set", setReceivedConfig);
-  webSocket.begin("192.168.60.119", 3000, "/socket.io/?transport=websocket&type=esp");
-  webSocket.setAuthorization("facu", "barrera");
+
+  // webSocket.begin("192.168.100.161", 3000, "/socket.io/?transport=websocket&type=esp");
+  // webSocket.setAuthorization("facu", "barrera");
 
   // pinMode(rele_vsin, OUTPUT);
   // pinMode(rele_r1, OUTPUT);
@@ -94,49 +107,76 @@ void setup() {
 
 void loop() {
   if (WiFiMulti.run() == WL_CONNECTED) {
-    if (estado_conexion == 1) {
-      webSocket.emit("config:get", "{}");
-      delay(MESSAGE_DELAY);
-    }
+    Serial.println("Wifi connected successfully");
 
-    if (estado_conexion == 2) {
-      //
-    }
+    String authorization = hostAuhtorizationType + String(" ") + hostAuthorization;
 
-    if (estado_conexion == 3) {
-      int voltaje[CANTIDAD_MUESTRAS] = {};
-      int corriente[CANTIDAD_MUESTRAS] = {};
+    webSocket.begin(hostIp, hostPort, "/socket.io/?transport=websocket&type=esp");
+    webSocket.setAuthorization(authorization.c_str());
 
-      for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
-        if (SIMULAR_VALORES) {
-          voltaje[x] = simularVoltaje(x);
-          corriente[x] = simularCorriente(x);
-        } else {
-          voltaje[x] = analogRead(PIN_READ_VOLT);
-          corriente[x] = analogRead(PIN_READ_CURR);
+    while(true) {
+      webSocket.loop();
+
+      Serial.printf("estado_conexion = %d\n", estado_conexion);
+      if (estado_conexion != 0) {
+        Serial.println("Connected to socket successfully\n");
+
+        while (WiFiMulti.run() == WL_CONNECTED && estado_conexion != 0) {
+          if (estado_conexion == 1) {
+            webSocket.emit("config:get", "{}");
+            delay(MESSAGE_DELAY);
+          }
+
+          if (estado_conexion == 2) {
+            //
+          }
+
+          if (estado_conexion == 3) {
+            int voltaje[CANTIDAD_MUESTRAS] = {};
+            int corriente[CANTIDAD_MUESTRAS] = {};
+
+            for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
+              if (SIMULAR_VALORES) {
+                voltaje[x] = simularVoltaje(x);
+                corriente[x] = simularCorriente(x);
+              } else {
+                voltaje[x] = analogRead(PIN_READ_VOLT);
+                corriente[x] = analogRead(PIN_READ_CURR);
+              }
+            }
+
+            String data = "{\"voltage\": [";
+
+            for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
+              if (x != 0) data += ",";
+              data += String(voltaje[x]);
+            }
+
+            data += "], \"current\": [";
+            for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
+              if (x != 0) data += ",";
+              data += String(corriente[x]);
+            }
+            data += "]}";
+
+            webSocket.emit("meassurement_data:post", data.c_str());
+          }
+
+          if (estado_conexion == -1) {
+            USE_SERIAL.println("bloqueando esp");
+            while (Serial.available() < 1) {};
+          }
+
+          Serial.println("info sending loop");
+          webSocket.loop();
         }
       }
 
-      String data = "{\"voltage\": [";
-
-      for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
-        if (x != 0) data += ",";
-        data += String(voltaje[x]);
-      }
-
-      data += "], \"current\": [";
-      for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
-        if (x != 0) data += ",";
-        data += String(corriente[x]);
-      }
-      data += "]}";
-
-      webSocket.emit("meassurement_data:post", data.c_str());
-      estado_conexion = 0;
+      Serial.println("try connect loop");
     }
-
-    webSocket.loop();
   }
+
+  Serial.println("loop");
 }
 
 

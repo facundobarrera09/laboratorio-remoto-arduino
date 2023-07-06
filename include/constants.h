@@ -7,7 +7,7 @@
 
 // Configuraciones del programa
 #define CANTIDAD_MUESTRAS 500
-#define MESSAGE_DELAY 500
+#define MESSAGE_DELAY 1000
 #define DELAY_RELES 2000
 
 // Pines de salida

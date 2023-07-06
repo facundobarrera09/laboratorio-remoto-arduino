@@ -20,6 +20,7 @@
 #endif
 
 #ifdef COMPILE_JSON
+  // #include <ArduinoJson.h>
   #include <ArduinoJson.h>
   #include "../src/classes/PinsConfig.h"
 #endif
@@ -37,6 +38,14 @@ int estado_conexion = 0;  // 0 - desconectado, 1 - esperando mensaje del servido
 #ifdef COMPILE_SOCKET
   WiFiMulti WiFiMulti;
   SocketIoClient webSocket;
+
+  char wifiSSID[33] = "FliaBarrera";
+  char wifiPassword[64] = "heladera24";
+
+  char hostIp[] = "192.168.100.161";
+  int hostPort = 3000;
+  char hostAuhtorizationType[] = "Bearer";
+  char hostAuthorization[100] = "valid token";
 #endif
 
 // Pins
