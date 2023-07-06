@@ -1,15 +1,18 @@
-#define DEBUG true
+#define DEBUG false
 
 // #define COMPILE_DISPLAY
 #define COMPILE_SOCKET
 #define COMPILE_JSON
-#define SIMULAR_VALORES true
+// #define COMPILE_CONSOLE
+
+#define PRINTF(...) Serial.printf(__VA_ARGS__); Serial.flush();
 
 #include "setup.h"
 #include "constants.h"
 #include "bitmaps.h"
 
 // Funciones de simulacion de datos
+bool simular_valores = true;
 int simularVoltaje(int x);
 int simularCorriente(int x);
 
@@ -19,7 +22,7 @@ int simularCorriente(int x);
 // }
 
 void connectedToIO(const char* payload, size_t length) {
-  Serial.printf("connected to webSocket\n");
+  PRINTF("connected to webSocket\n");
   estado_conexion = 1;
 }
 
@@ -57,24 +60,64 @@ void setReceivedConfig(const char* payload, size_t length) {
   // }
 }
 
+#ifdef COMPILE_CONSOLE
+int socketCommand(int argc, char **argv) {
+  if (argc < 2) {
+    PRINTF("Usage:\n\t- socket.io [options]\n\nOptions:\n\t --set-authorization VALUE : Set the authorization value to be sent during the handshake\n\t -r : Restart socket connection");
+    
+    return EXIT_FAILURE;
+  }
+  
+  for (int x = 1; x < argc; x++) {
+    auto arg = String(argv[x]);
+
+    if (arg == "--list-config") {
+      if (x == 1) {
+        PRINTF("Configuracion de socket.io\n");
+        PRINTF("\t- estado_conexion    = %d\n", estado_conexion);
+        PRINTF("\t- host_ip            = %s\n", host_ip);
+        PRINTF("\t- host_port          = %d\n", host_port);
+        PRINTF("\t- host_authorization = %s\n", host_authorization);
+      }
+    }
+
+    if (arg == "--set-authorization") {
+      if (++x == argc) return EXIT_FAILURE;
+      
+      host_authorization = String(argv[x]);
+      PRINTF("Changed authorization string to %s\n", host_authorization);
+    }
+
+    if (arg == "--set-simulation") {
+      if (++x == argc) return EXIT_FAILURE;
+
+      simular_valores = (String(argv[x]) == "true") ? true : false;
+    }
+
+    if (arg == "-r") {
+      PRINTF("Disconnecting from socket\n");
+      webSocket.disconnect();
+      estado_conexion = 0;
+    }
+  }
+  
+  return EXIT_SUCCESS;
+}
+#endif
+
 void setup() {
-  USE_SERIAL.begin(115200);
+  Serial.begin(115200);
+  Serial.setDebugOutput(DEBUG);
 
-  USE_SERIAL.setDebugOutput(DEBUG);
-
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-
+  PRINTF("\n\n\n");
   for (uint8_t t = 4; t > 0; t--) {
-    USE_SERIAL.printf("[SETUP] BOOT WAIT %d...\n", t);
-    USE_SERIAL.flush();
+    PRINTF("[SETUP] BOOT WAIT %d...\n", t);
     delay(1000);
   }
 
   #ifdef COMPILE_DISPLAY
   if (!display.begin(DIR_I2C, true)) {
-    Serial.println(F("Pantalla OLED No Encontrada"));
+    PRINTF(F("Pantalla OLED No Encontrada"));
     for (;;)
       ;  //Eterno bucle sin hacer nada xD
   }
@@ -136,7 +179,7 @@ void loop() {
             int corriente[CANTIDAD_MUESTRAS] = {};
 
             for (int x = 0; x < CANTIDAD_MUESTRAS; x++) {
-              if (SIMULAR_VALORES) {
+              if (simular_valores) {
                 voltaje[x] = simularVoltaje(x);
                 corriente[x] = simularCorriente(x);
               } else {
@@ -167,16 +210,11 @@ void loop() {
             while (Serial.available() < 1) {};
           }
 
-          Serial.println("info sending loop");
           webSocket.loop();
         }
       }
-
-      Serial.println("try connect loop");
     }
   }
-
-  Serial.println("loop");
 }
 
 

@@ -7,6 +7,8 @@
 *
 */
 
+// #include <Arduino.h>
+
 #ifdef COMPILE_DISPLAY
   #include <Wire.h>
   #include <Adafruit_GFX.h>
@@ -33,7 +35,11 @@
 #include "constants.h"
 
 // Conexion
-int estado_conexion = 0;  // 0 - desconectado, 1 - esperando mensaje del servidor, 2 - procesando mensaje del servidor, 3 - enviando mediciones al servidor
+int estado_conexion = 0;  // -1 - error: esperando accion del usuario, 0 - desconectado, 1 - esperando mensaje del servidor, 2 - procesando mensaje del servidor, 3 - enviando mediciones al servidor
+
+char host_ip[16];
+int host_port;
+String host_authorization;
 
 #ifdef COMPILE_SOCKET
   WiFiMulti WiFiMulti;
