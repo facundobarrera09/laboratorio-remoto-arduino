@@ -45,10 +45,10 @@ String host_authorization;
   WiFiMulti WiFiMulti;
   SocketIoClient webSocket;
 
-  char wifiSSID[33] = "FliaBarrera";
-  char wifiPassword[64] = "heladera24";
+  char wifiSSID[33] = "ciasur";
+  char wifiPassword[64] = "2022ciasur";
 
-  char hostIp[] = "192.168.100.161";
+  char hostIp[16] = "192.168.60.100";
   int hostPort = 3000;
   char hostAuhtorizationType[] = "Bearer";
   char hostAuthorization[100] = "valid token";

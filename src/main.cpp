@@ -1,6 +1,6 @@
 #define DEBUG false
 
-// #define COMPILE_DISPLAY
+#define COMPILE_DISPLAY
 #define COMPILE_SOCKET
 #define COMPILE_JSON
 // #define COMPILE_CONSOLE
@@ -12,7 +12,7 @@
 #include "bitmaps.h"
 
 // Funciones de simulacion de datos
-bool simular_valores = true;
+bool simular_valores = false;
 int simularVoltaje(int x);
 int simularCorriente(int x);
 
@@ -117,7 +117,7 @@ void setup() {
 
   #ifdef COMPILE_DISPLAY
   if (!display.begin(DIR_I2C, true)) {
-    PRINTF(F("Pantalla OLED No Encontrada"));
+    Serial.println("Pantalla OLED No Encontrada");
     for (;;)
       ;  //Eterno bucle sin hacer nada xD
   }
@@ -139,13 +139,13 @@ void setup() {
   // webSocket.begin("192.168.100.161", 3000, "/socket.io/?transport=websocket&type=esp");
   // webSocket.setAuthorization("facu", "barrera");
 
-  // pinMode(rele_vsin, OUTPUT);
-  // pinMode(rele_r1, OUTPUT);
-  // pinMode(rele_c, OUTPUT);
-  // pinMode(rele_l, OUTPUT);
-  // pinMode(rele_r2, OUTPUT);
-  // pinMode(read_1, INPUT);
-  // pinMode(read_2, INPUT);
+  pinMode(PIN_WRITE_VSIN, OUTPUT);
+  pinMode(PIN_WRITE_R1, OUTPUT);
+  pinMode(PIN_WRITE_R2, OUTPUT);
+  // pinMode(PIN_WRITE_C, OUTPUT);
+  // pinMode(PIN_WRITE_L, OUTPUT);
+  pinMode(PIN_READ_VOLT, INPUT);
+  pinMode(PIN_READ_CURR, INPUT);
 }
 
 void loop() {
@@ -160,7 +160,6 @@ void loop() {
     while(true) {
       webSocket.loop();
 
-      Serial.printf("estado_conexion = %d\n", estado_conexion);
       if (estado_conexion != 0) {
         Serial.println("Connected to socket successfully\n");
 

@@ -2,12 +2,6 @@
 
 #include "../../include/constants.h"
 
-#define RELE_VSIN 0
-#define RELE_R1 1
-#define RELE_R2 2
-#define RELE_C 3
-#define RELE_L 4
-
 PinsConfig::PinsConfig() {
 
 }
@@ -15,11 +9,11 @@ PinsConfig::PinsConfig() {
 void PinsConfig::applyChange() {
   boolean vsin, r1, c, l, r2;
 
-  vsin = (boolean) configDoc[0];
-  r1   = (boolean) configDoc[1];
-  c    = (boolean) configDoc[2];
-  l    = (boolean) configDoc[3];
-  r2   = (boolean) configDoc[4];
+  vsin = (boolean) pinsConfig[0];
+  r1   = (boolean) pinsConfig[1];
+  c    = (boolean) pinsConfig[2];
+  l    = (boolean) pinsConfig[3];
+  r2   = (boolean) pinsConfig[4];
 
   // vsin = (boolean) configDoc["rele1"];
   // r1   = (boolean) configDoc["rele2"];
@@ -29,21 +23,21 @@ void PinsConfig::applyChange() {
 
   if (vsin) {
     // Desconectar el circuito y esperar
-    digitalWrite(RELE_VSIN, LOW);
+    digitalWrite(PIN_WRITE_VSIN, LOW);
     delay(DELAY_RELES);
 
     // Realizar los cambios en el circuito
-    digitalWrite(RELE_R1, r1);
-    digitalWrite(RELE_R2, r2);
-    digitalWrite(RELE_C, c);
-    digitalWrite(RELE_L, l);
+    digitalWrite(PIN_WRITE_R1, r1);
+    digitalWrite(PIN_WRITE_R2, r2);
+    // digitalWrite(PIN_WRITE_C, c);
+    // digitalWrite(PIN_WRITE_L, l);
 
     // Esperar y encender el circuito
     delay(DELAY_RELES);
-    digitalWrite(RELE_VSIN, HIGH);
+    digitalWrite(PIN_WRITE_VSIN, HIGH);
   }
   else {
-    digitalWrite(RELE_VSIN, LOW);
+    digitalWrite(PIN_WRITE_VSIN, LOW);
   }
 }
 

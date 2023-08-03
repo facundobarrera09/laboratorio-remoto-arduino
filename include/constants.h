@@ -11,7 +11,7 @@
 #define DELAY_RELES 2000
 
 // Pines de salida
-#define PIN_WRITE_VISN 23
+#define PIN_WRITE_VSIN 23
 #define PIN_WRITE_R1 22
 #define PIN_WRITE_R2 2
 #define PIN_WRITE_C 5
